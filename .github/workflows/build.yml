@@ -35,3 +35,20 @@ jobs:
         with:
           name: aspnet-core-app
           path: ./publish
+
+      - name: Deploy to IIS
+        shell: powershell
+        run: |
+          $target = "C:\inetpub\GithubActionsDemo"
+
+          New-Item -Path "$target\app_offline.htm" -ItemType File -Force | Out-Null
+
+          Start-Sleep -Seconds 2
+
+          robocopy ".\publish" "$target" /E /R:2 /W:2
+
+          if ($LASTEXITCODE -ge 8) {
+              exit $LASTEXITCODE
+          }
+
+          Remove-Item "$target\app_offline.htm" -Force
