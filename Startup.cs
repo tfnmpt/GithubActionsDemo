@@ -16,6 +16,7 @@ namespace GithubActionsDemo
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            this is error
         }
 
         public IConfiguration Configuration { get; }
