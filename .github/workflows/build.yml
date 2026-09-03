@@ -36,19 +36,37 @@ jobs:
           name: aspnet-core-app
           path: ./publish
 
-      - name: Deploy to IIS
-        shell: powershell
-        run: |
-          $target = "C:\inetpub\GithubActionsDemo"
+        - name: Deploy to IIS
+            shell: powershell
+            run: |
+              Import-Module WebAdministration
 
-          New-Item -Path "$target\app_offline.htm" -ItemType File -Force | Out-Null
+              $appPool = "GithubActionsDemo"
+              $target = "C:\inetpub\GithubActionsDemo"
 
-          Start-Sleep -Seconds 2
+              Write-Host "Stopping IIS Application Pool..."
+              Stop-WebAppPool -Name $appPool
 
-          robocopy ".\publish" "$target" /E /R:2 /W:2
+              Start-Sleep -Seconds 3
 
-          if ($LASTEXITCODE -ge 8) {
-              exit $LASTEXITCODE
-          }
+              Write-Host "Copying published files..."
+              robocopy ".\publish" "$target" /E /R:2 /W:2
 
-          Remove-Item "$target\app_offline.htm" -Force
+              $robocopyExitCode = $LASTEXITCODE
+
+              if ($robocopyExitCode -ge 8) {
+                  Write-Error "Robocopy failed with exit code $robocopyExitCode"
+                  Start-WebAppPool -Name $appPool
+                  exit $robocopyExitCode
+              }
+
+              Write-Host "Robocopy completed with exit code $robocopyExitCode"
+
+              Write-Host "Starting IIS Application Pool..."
+              Start-WebAppPool -Name $appPool
+
+              Start-Sleep -Seconds 3
+
+              Write-Host "Deployment completed successfully."
+
+              exit 0
