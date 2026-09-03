@@ -36,37 +36,37 @@ jobs:
           name: aspnet-core-app
           path: ./publish
 
-        - name: Deploy to IIS
-            shell: powershell
-            run: |
-              Import-Module WebAdministration
+      - name: Deploy to IIS
+        shell: powershell
+        run: |
+          Import-Module WebAdministration
 
-              $appPool = "GithubActionsDemo"
-              $target = "C:\inetpub\GithubActionsDemo"
+          $appPool = "GithubActionsDemo"
+          $target = "C:\inetpub\GithubActionsDemo"
 
-              Write-Host "Stopping IIS Application Pool..."
-              Stop-WebAppPool -Name $appPool
+          Write-Host "Stopping IIS Application Pool..."
+          Stop-WebAppPool -Name $appPool
 
-              Start-Sleep -Seconds 3
+          Start-Sleep -Seconds 3
 
-              Write-Host "Copying published files..."
-              robocopy ".\publish" "$target" /E /R:2 /W:2
+          Write-Host "Copying published files..."
+          robocopy ".\publish" "$target" /E /R:2 /W:2
 
-              $robocopyExitCode = $LASTEXITCODE
+          $robocopyExitCode = $LASTEXITCODE
 
-              if ($robocopyExitCode -ge 8) {
-                  Write-Error "Robocopy failed with exit code $robocopyExitCode"
-                  Start-WebAppPool -Name $appPool
-                  exit $robocopyExitCode
-              }
-
-              Write-Host "Robocopy completed with exit code $robocopyExitCode"
-
-              Write-Host "Starting IIS Application Pool..."
+          if ($robocopyExitCode -ge 8) {
+              Write-Error "Robocopy failed with exit code $robocopyExitCode"
               Start-WebAppPool -Name $appPool
+              exit $robocopyExitCode
+          }
 
-              Start-Sleep -Seconds 3
+          Write-Host "Robocopy completed with exit code $robocopyExitCode"
 
-              Write-Host "Deployment completed successfully."
+          Write-Host "Starting IIS Application Pool..."
+          Start-WebAppPool -Name $appPool
 
-              exit 0
+          Start-Sleep -Seconds 3
+
+          Write-Host "Deployment completed successfully."
+
+          exit 0
